@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PropertyAdvisors | 東京・不動産投資</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Noto+Sans+JP:wght@300;400;500;600;700&family=Shippori+Mincho+B1:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans JP',sans-serif;background:#fff;color:#0d1426;overflow-x:hidden;line-height:1.7;-webkit-font-smoothing:antialiased}
+:root{
+  --b1:#16336b;--b2:#1f5bc7;--b2d:#173f8f;--b3:#0a1a38;--b4:#060912;
+  --bl:#e8eef8;--bl2:#d4e0f4;--bdr-b:rgba(31,91,199,.18);
+  --gd:#c9a44c;--gd2:#e0b955;--gd-deep:#a8841f;--bdr-g:rgba(201,164,76,.3);
+  --bg:#f6f8fc;--bg2:#eaeff8;--white:#ffffff;
+  --ink:#0d1426;--ink2:#283450;--ink3:#5a6580;
+  --ok:#0d8a4a;--warn:#c98318;--ng:#c63838;
+  --shd:0 8px 40px rgba(13,20,38,.1);--shd2:0 20px 60px rgba(13,20,38,.18)
+}
+
+/* ── HEADER ── */
+#hd{position:fixed;top:0;left:0;right:0;z-index:900;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 5%;transition:all .35s}
+#hd.s{background:rgba(255,255,255,.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--bdr-b);box-shadow:0 2px 20px rgba(13,20,38,.06)}
+.logo{font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:500;letter-spacing:.06em;color:var(--ink);cursor:pointer;user-select:none}
+.logo b{color:var(--b2);font-weight:500}
+#hd:not(.s) .logo{color:#fff}
+#hd:not(.s) .logo b{color:var(--gd2)}
+.hd-nav{display:flex;align-items:center;gap:.4rem}
+.hd-nav a{font-size:.78rem;font-weight:500;letter-spacing:.08em;color:var(--ink3);cursor:pointer;padding:.5rem .9rem;transition:color .2s;text-decoration:none}
+#hd:not(.s) .hd-nav a{color:rgba(255,255,255,.7)}
+.hd-nav a:hover{color:var(--b2)}
+#hd:not(.s) .hd-nav a:hover{color:#fff}
+.hd-btn{font-size:.82rem!important;font-weight:600!important;letter-spacing:.05em!important;padding:.7rem 1.4rem!important;background:var(--b2);color:#fff!important;border:none;cursor:pointer;transition:all .25s;text-decoration:none;display:inline-flex!important;align-items:center;gap:.4rem;border-radius:3px}
+.hd-btn:hover{background:var(--b1)!important;transform:translateY(-1px);box-shadow:0 6px 20px rgba(31,91,199,.4)}
+#hd:not(.s) .hd-btn{background:var(--gd2);color:#1a1a1a!important}
+#hd:not(.s) .hd-btn:hover{background:var(--gd);box-shadow:0 6px 20px rgba(201,164,76,.5)}
+
+/* ── HERO ── */
+.hero{min-height:100svh;background:linear-gradient(180deg,#142a5c 0%,#0f234d 100%);position:relative;overflow:hidden;display:flex;align-items:center;padding:96px 5% 64px}
+.hero::before{content:'';position:absolute;right:-15%;top:10%;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.06) 0%,transparent 65%);pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:180px;background:linear-gradient(to top,rgba(10,26,56,.7),transparent);pointer-events:none}
+.hero-inner{position:relative;z-index:2;width:100%;max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1.05fr .95fr;gap:5rem;align-items:center}
+.eyebrow{font-size:.72rem;font-weight:500;letter-spacing:.3em;color:var(--gd2);display:flex;align-items:center;gap:.8rem;margin-bottom:2rem;text-transform:uppercase}
+.eyebrow::before{content:'';width:28px;height:1px;background:var(--gd2)}
+.hero-l h1{font-family:'Shippori Mincho B1',serif;font-size:clamp(2.6rem,4.6vw,4rem);font-weight:600;color:#fff;line-height:1.4;letter-spacing:.02em;margin-bottom:1.2rem;text-wrap:pretty}
+.hero-l h1 em{font-style:normal;color:var(--gd2);position:relative}
+.hero-l h1 em::after{content:'';position:absolute;left:0;right:0;bottom:-4px;height:1px;background:rgba(224,185,85,.4)}
+.hero-l .lead{font-size:1.05rem;font-weight:400;color:rgba(255,255,255,.85);line-height:1.95;max-width:480px;margin-bottom:2rem}
+.hero-l .lead strong{color:#fff;font-weight:600}
+
+/* MEGA CTA */
+.cta-block{display:flex;flex-direction:column;align-items:flex-start;gap:.7rem;margin-top:.5rem}
+.cta-precopy{font-size:.92rem;font-weight:500;color:#fff;line-height:1.7;margin-bottom:.4rem}
+.cta-precopy span{color:var(--gd2)}
+.btn-mega{display:inline-flex;align-items:center;justify-content:center;gap:.7rem;background:linear-gradient(135deg,var(--gd2) 0%,var(--gd) 100%);color:#0a0a0a;border:none;padding:1.25rem 2.4rem;font-family:'Noto Sans JP',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:.04em;cursor:pointer;transition:all .3s;text-decoration:none;border-radius:4px;box-shadow:0 12px 40px rgba(201,164,76,.35),inset 0 1px 0 rgba(255,255,255,.4);position:relative;animation:pulseGold 2.4s ease-in-out infinite}
+@keyframes pulseGold{0%,100%{box-shadow:0 12px 40px rgba(201,164,76,.35),inset 0 1px 0 rgba(255,255,255,.4)}50%{box-shadow:0 12px 50px rgba(224,185,85,.65),inset 0 1px 0 rgba(255,255,255,.4)}}
+.btn-mega:hover{transform:translateY(-3px);animation:none;box-shadow:0 18px 55px rgba(224,185,85,.7),inset 0 1px 0 rgba(255,255,255,.4)}
+.btn-mega svg{width:18px;height:18px;stroke:currentColor;stroke-width:2.5;fill:none;transition:transform .3s}
+.btn-mega:hover svg{transform:translateX(4px)}
+.btn-sub{font-size:.78rem;font-weight:400;color:rgba(255,255,255,.55);margin-top:.4rem;letter-spacing:.02em}
+.checks{display:flex;flex-wrap:wrap;gap:.5rem .9rem;margin-top:.3rem}
+.check{display:inline-flex;align-items:center;gap:.35rem;font-size:.82rem;font-weight:500;color:rgba(255,255,255,.85);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);padding:.35rem .75rem;border-radius:20px}
+.check::before{content:'✓';color:var(--gd2);font-weight:700}
+
+/* HERO CARDS */
+.hero-r{display:grid;grid-template-columns:1fr;gap:.8rem}
+.hd-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);padding:1.5rem 1.7rem;position:relative;overflow:hidden;backdrop-filter:blur(8px);border-radius:3px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:1.2rem}
+.hd-card.fear{border-left:3px solid #d96868}
+.hd-card.hope{border-left:3px solid var(--gd2);background:rgba(201,164,76,.08)}
+.hdc-l{font-size:.78rem;font-weight:500;color:rgba(255,255,255,.65);margin-bottom:.4rem;letter-spacing:.02em}
+.hdc-d{font-size:.78rem;font-weight:300;color:rgba(255,255,255,.6);line-height:1.7;margin-top:.4rem}
+.hdc-n{font-family:'Noto Sans JP',sans-serif;font-size:2.3rem;font-weight:700;color:#fff;line-height:1;white-space:nowrap}
+.hd-card.hope .hdc-n{color:var(--gd2)}
+.hd-card.fear .hdc-n{color:#ff9292}
+.hdc-n sub{font-size:.9rem;font-weight:400;color:rgba(255,255,255,.6);vertical-align:baseline;margin-left:.2rem}
+.hd-card.fear .hdc-n sub{color:rgba(255,146,146,.7)}
+.hd-card.hope .hdc-n sub{color:rgba(224,185,85,.7)}
+
+/* ── STEPS (信頼ブロック) ── */
+.steps{background:var(--bg);padding:5rem 5% 5rem;position:relative}
+.steps-inner{max-width:1100px;margin:0 auto;text-align:center}
+.steps-h{font-family:'Shippori Mincho B1',serif;font-size:clamp(1.5rem,2.4vw,2rem);font-weight:600;color:var(--ink);margin-bottom:.6rem;line-height:1.5}
+.steps-sub{font-size:1rem;font-weight:400;color:var(--ink2);margin-bottom:3rem}
+.steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;position:relative}
+.steps-grid::before{content:'';position:absolute;top:32px;left:16.6%;right:16.6%;height:1px;background:var(--bdr-b);z-index:0}
+.step{position:relative;z-index:1;padding:0 1rem;text-align:center}
+.step-num{width:64px;height:64px;margin:0 auto 1.2rem;background:#fff;border:2px solid var(--b2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:500;color:var(--b2)}
+.step-h{font-size:1.05rem;font-weight:600;color:var(--ink);margin-bottom:.4rem}
+.step-p{font-size:.88rem;font-weight:400;color:var(--ink2);line-height:1.8}
+
+/* ── SECTION COMMON ── */
+.s-tag{font-size:.74rem;font-weight:600;letter-spacing:.22em;color:var(--b2);display:block;margin-bottom:1rem;text-transform:uppercase}
+.s-tag-g{color:var(--gd2)}
+.s-h{font-family:'Shippori Mincho B1',serif;font-size:clamp(1.7rem,3vw,2.4rem);font-weight:600;color:var(--ink);line-height:1.5;letter-spacing:.02em}
+.s-h-w{color:#fff}
+.s-rule{width:36px;height:2px;background:var(--b2);margin:1.4rem 0}
+.s-rule-g{background:var(--gd2)}
+.s-p{font-size:1rem;font-weight:400;color:var(--ink2);line-height:1.95;max-width:560px;margin-top:1rem}
+
+/* ── SCENE ── */
+.scene{padding:6rem 5%;background:var(--white)}
+.scene-inner{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:1fr 1.05fr;gap:5rem;align-items:center}
+.scene-visual{background:linear-gradient(135deg,var(--bl) 0%,var(--white) 100%);border:1px solid var(--bdr-b);padding:2.5rem 2.3rem;border-radius:4px}
+.scene-item{display:flex;gap:1.2rem;align-items:flex-start;padding:1.4rem 0;border-bottom:1px solid var(--bdr-b)}
+.scene-item:last-child{border-bottom:none}
+.si-icon{width:44px;height:44px;flex-shrink:0;background:var(--b2);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.95rem;font-weight:600;border-radius:50%}
+.si-h{font-size:1rem;font-weight:600;color:var(--ink);margin-bottom:.35rem;line-height:1.5}
+.si-p{font-size:.88rem;font-weight:400;color:var(--ink2);line-height:1.8}
+
+/* ── INSERTION CTA (軽い温度) ── */
+.ins-cta{padding:3rem 5%;background:var(--bg);text-align:center;border-top:1px solid var(--bdr-b);border-bottom:1px solid var(--bdr-b)}
+.ins-cta-inner{max-width:680px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:.9rem}
+.ins-cta-h{font-size:1.05rem;font-weight:500;color:var(--ink2)}
+.btn-line{display:inline-flex;align-items:center;gap:.5rem;font-size:.95rem;font-weight:600;color:var(--b2);text-decoration:none;border-bottom:1px solid var(--b2);padding-bottom:.15rem;transition:all .25s}
+.btn-line:hover{color:var(--b1);gap:.8rem}
+
+/* ── COMPARE ── */
+.compare{padding:5rem 5%;background:var(--bg)}
+.compare-inner{max-width:1100px;margin:0 auto}
+.compare-wrap{margin-top:3rem;overflow-x:auto}
+.compare-table{width:100%;border-collapse:collapse;min-width:620px;background:#fff;border-radius:4px;overflow:hidden;box-shadow:var(--shd)}
+.compare-table{position:relative}
+.compare-table th{font-size:.86rem;font-weight:600;letter-spacing:.04em;color:var(--ink3);text-align:center;padding:1.2rem 1rem;border-bottom:2px solid var(--bdr-b);background:#fafbfd;position:relative}
+.compare-table th.hl{color:#fff;background:linear-gradient(135deg,var(--b1) 0%,#0a224d 100%);position:relative;border-left:2px solid var(--gd2);border-right:2px solid var(--gd2);border-top:2px solid var(--gd2)}
+.compare-table th.hl span{color:rgba(255,255,255,.9)!important}
+.compare-table td{font-size:.92rem;font-weight:400;color:var(--ink2);text-align:center;padding:1.1rem 1rem;border-bottom:1px solid rgba(13,20,38,.06)}
+.compare-table td.row-h{text-align:left;font-weight:600;color:var(--ink);font-size:.92rem}
+.compare-table td.hl{background:linear-gradient(180deg,rgba(31,91,199,.18) 0%,rgba(31,91,199,.12) 100%);color:var(--b1);font-weight:700;border-left:2px solid var(--gd2);border-right:2px solid var(--gd2);position:relative}
+.compare-table tbody tr:last-child td.hl{border-bottom:2px solid var(--gd2);box-shadow:0 8px 24px rgba(201,164,76,.15)}
+.compare-table td.hl .c-circle.c-good{background:var(--b2);color:#fff;transform:scale(1.1)}
+.compare-table td.hl .c-cell-label{color:var(--b1);font-weight:600}
+.compare-table tr:last-child td{border-bottom:none}
+.c-circle{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;font-size:.85rem;font-weight:700;margin-bottom:.25rem}
+.c-good{background:#dcefe2;color:var(--ok)}
+.c-mid{background:#fdf2d0;color:var(--warn)}
+.c-low{background:#fbdcdc;color:var(--ng)}
+.c-cell-label{font-size:.78rem;font-weight:400;color:var(--ink3);display:block;margin-top:.2rem}
+.compare-note{font-size:.78rem;font-weight:400;color:var(--ink3);margin-top:1.2rem;line-height:1.8}
+
+/* ── REASONS ── */
+.reasons{padding:6rem 5%;background:var(--white)}
+.reasons-inner{max-width:1180px;margin:0 auto}
+.reasons-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.6rem;margin-top:3rem}
+.reason-card{border:1px solid var(--bdr-b);padding:2.2rem 1.8rem;position:relative;overflow:hidden;transition:all .3s;background:var(--white);border-radius:4px}
+.reason-card:hover{transform:translateY(-6px);box-shadow:var(--shd2);border-color:var(--b2)}
+.rc-bar{position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--b1),var(--b2));transform:scaleX(0);transform-origin:left;transition:transform .4s}
+.reason-card:hover .rc-bar{transform:scaleX(1)}
+.rc-n{font-family:'Cormorant Garamond',serif;font-size:3.2rem;font-weight:400;color:rgba(31,91,199,.12);line-height:1;margin-bottom:.8rem}
+.rc-h{font-size:1.1rem;font-weight:600;color:var(--ink);margin-bottom:.6rem;line-height:1.5}
+.rc-p{font-size:.92rem;font-weight:400;color:var(--ink2);line-height:1.9}
+.rc-badge{display:inline-block;margin-top:1rem;font-size:.74rem;font-weight:600;letter-spacing:.08em;color:var(--b2);background:var(--bl);padding:.3rem .8rem;border-radius:3px}
+
+/* ── BIG CTA (STANDARD) ── */
+.std-cta{padding:5rem 5%;background:linear-gradient(135deg,var(--b2d) 0%,var(--b1) 100%);text-align:center;position:relative;overflow:hidden}
+.std-cta::before{content:'';position:absolute;left:-10%;top:-30%;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.06) 0%,transparent 70%)}
+.std-cta-inner{position:relative;z-index:1;max-width:680px;margin:0 auto}
+.std-cta h2{font-family:'Shippori Mincho B1',serif;font-size:clamp(1.5rem,2.6vw,2.1rem);font-weight:600;color:#fff;line-height:1.55;margin-bottom:.8rem}
+.std-cta p{font-size:1rem;font-weight:400;color:rgba(255,255,255,.85);line-height:1.9;margin-bottom:1.6rem;max-width:520px;margin-left:auto;margin-right:auto}
+.std-cta .cta-block{align-items:center}
+.std-cta .checks{justify-content:center}
+.btn-blue-strong{display:inline-flex;align-items:center;gap:.7rem;background:#fff;color:var(--b1);border:none;padding:1.25rem 2.4rem;font-family:'Noto Sans JP',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:.04em;cursor:pointer;transition:all .3s;text-decoration:none;border-radius:4px;box-shadow:0 12px 35px rgba(0,0,0,.25)}
+.btn-blue-strong:hover{transform:translateY(-3px);box-shadow:0 18px 50px rgba(0,0,0,.35);background:var(--bl)}
+.btn-blue-strong svg{width:18px;height:18px;stroke:currentColor;stroke-width:2.5;fill:none;transition:transform .3s}
+.btn-blue-strong:hover svg{transform:translateX(4px)}
+
+/* ── PREMIUM DIVIDER ── */
+.prem-div{background:var(--b3);padding:5rem 5%;text-align:center;position:relative;overflow:hidden;border-top:1px solid rgba(201,164,76,.25)}
+.prem-div::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 100% at 50% 50%,rgba(201,164,76,.07) 0%,transparent 70%)}
+.prem-div-inner{position:relative;z-index:1;max-width:680px;margin:0 auto}
+.prem-div-tag{font-size:.74rem;font-weight:500;letter-spacing:.36em;color:var(--gd2);border:1px solid var(--bdr-g);padding:.4rem 1.4rem;display:inline-block;margin-bottom:2rem}
+.prem-div-h{font-family:'Cormorant Garamond',serif;font-size:clamp(1.8rem,3vw,2.6rem);font-weight:400;color:#fff;line-height:1.5;letter-spacing:.04em;margin-bottom:1rem}
+.prem-div-h .jp{font-family:'Shippori Mincho B1',serif;font-weight:600}
+.prem-div-p{font-size:1rem;font-weight:400;color:rgba(255,255,255,.7);line-height:1.95}
+
+/* ── PILLARS ── */
+.pillars{padding:6rem 5%;background:var(--b4)}
+.pillars-inner{max-width:1180px;margin:0 auto}
+.pillars-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(201,164,76,.18);margin-top:3rem}
+.pillar{background:var(--b4);padding:2.8rem 2rem;position:relative;overflow:hidden;transition:background .3s}
+.pillar:hover{background:#0a0e1e}
+.pillar::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:var(--gd2);transform:scaleX(0);transform-origin:left;transition:transform .4s}
+.pillar:hover::after{transform:scaleX(1)}
+.pl-en{font-family:'Cormorant Garamond',serif;font-size:.78rem;font-weight:400;letter-spacing:.22em;color:var(--gd);margin-bottom:.6rem;text-transform:uppercase}
+.pl-h{font-family:'Shippori Mincho B1',serif;font-size:1.2rem;font-weight:600;color:#fff;letter-spacing:.02em;margin-bottom:.8rem}
+.pl-p{font-size:.9rem;font-weight:400;color:rgba(255,255,255,.7);line-height:1.95}
+
+/* ── FAQ ── */
+.faq{padding:6rem 5%;background:var(--bg)}
+.faq-inner{max-width:780px;margin:0 auto}
+.faq-list{margin-top:2.5rem;display:flex;flex-direction:column;gap:.7rem}
+.faq-item{background:#fff;border:1px solid var(--bdr-b);border-radius:4px;overflow:hidden;transition:all .25s}
+.faq-item[open]{box-shadow:var(--shd);border-color:var(--b2)}
+.faq-q{padding:1.3rem 1.5rem;font-size:1rem;font-weight:600;color:var(--ink);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:1rem;line-height:1.5}
+.faq-q::-webkit-details-marker{display:none}
+.faq-q::after{content:'+';font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:400;color:var(--b2);transition:transform .25s;flex-shrink:0}
+.faq-item[open] .faq-q::after{content:'−';transform:rotate(0)}
+.faq-q .qmark{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:500;color:var(--b2);margin-right:.6rem}
+.faq-a{padding:0 1.5rem 1.4rem;font-size:.92rem;font-weight:400;color:var(--ink2);line-height:1.9}
+.faq-a strong{color:var(--ink);font-weight:600}
+
+/* ── PREM CTA ── */
+.prem-cta{padding:7rem 5%;background:var(--b4);text-align:center;position:relative;overflow:hidden}
+.prem-cta::before{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:580px;height:580px;border-radius:50%;border:1px solid rgba(201,164,76,.1)}
+.prem-cta::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:320px;height:320px;border-radius:50%;border:1px solid rgba(201,164,76,.14)}
+.prem-cta-inner{position:relative;z-index:1;max-width:560px;margin:0 auto}
+.p-divider{width:56px;height:1px;background:linear-gradient(90deg,transparent,var(--gd),transparent);margin:1.5rem auto}
+.prem-cta h2{font-family:'Shippori Mincho B1',serif;font-size:clamp(1.8rem,3vw,2.4rem);font-weight:600;color:#fff;line-height:1.55;margin:1rem 0}
+.prem-cta .lead{font-size:.98rem;font-weight:400;color:rgba(255,255,255,.7);line-height:1.95;margin-bottom:2.4rem}
+.btn-gold-big{display:inline-flex;align-items:center;gap:.7rem;background:linear-gradient(135deg,var(--gd2) 0%,var(--gd) 100%);color:#0a0a0a;border:none;padding:1.3rem 2.6rem;font-family:'Noto Sans JP',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:.04em;cursor:pointer;transition:all .3s;text-decoration:none;border-radius:4px;box-shadow:0 12px 40px rgba(201,164,76,.4)}
+.btn-gold-big:hover{transform:translateY(-3px);box-shadow:0 18px 55px rgba(224,185,85,.6)}
+.btn-gold-big svg{width:18px;height:18px;stroke:currentColor;stroke-width:2.5;fill:none;transition:transform .3s}
+.btn-gold-big:hover svg{transform:translateX(4px)}
+.prem-cta .checks{justify-content:center;margin-top:1rem}
+.prem-cta .check{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.85)}
+
+/* ── FOOTER ── */
+.ft{background:#040710;border-top:1px solid rgba(201,164,76,.12);padding:2.8rem 5%}
+.ft-in{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1.5rem;max-width:1180px;margin:0 auto}
+.ft-logo{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:500;color:rgba(255,255,255,.55);letter-spacing:.06em}
+.ft-logo b{color:var(--gd);font-weight:500}
+.ft-links{display:flex;gap:1.6rem;flex-wrap:wrap}
+.ft-links a{font-size:.82rem;font-weight:400;color:rgba(255,255,255,.4);cursor:pointer;transition:color .2s;letter-spacing:.02em;text-decoration:none}
+.ft-links a:hover{color:var(--gd)}
+.ft-disc{padding:1rem 5%;font-size:.72rem;font-weight:300;color:rgba(255,255,255,.3);line-height:1.85;border-top:1px solid rgba(255,255,255,.05);background:#040710;text-align:center}
+
+/* ── MOBILE STICKY ── */
+.mob-cta{display:none;position:fixed;bottom:0;left:0;right:0;z-index:800;padding:.7rem 1rem;background:rgba(255,255,255,.97);backdrop-filter:blur(12px);border-top:1px solid var(--bdr-b);box-shadow:0 -4px 20px rgba(0,0,0,.08)}
+.mob-cta a{display:block;text-align:center;background:linear-gradient(135deg,var(--gd2) 0%,var(--gd) 100%);color:#0a0a0a;padding:.95rem;font-size:.95rem;font-weight:700;letter-spacing:.02em;text-decoration:none;border-radius:4px;box-shadow:0 4px 15px rgba(201,164,76,.4)}
+.mob-cta a small{display:block;font-size:.66rem;font-weight:500;margin-top:.1rem;opacity:.75}
+
+/* ── REVEAL ── */
+.rv{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
+.rv.in{opacity:1;transform:none}
+.rv-l{opacity:0;transform:translateX(-22px);transition:opacity .7s ease,transform .7s ease}
+.rv-l.in{opacity:1;transform:none}
+.rv-r{opacity:0;transform:translateX(22px);transition:opacity .7s ease,transform .7s ease}
+.rv-r.in{opacity:1;transform:none}
+
+/* ── RESPONSIVE ── */
+@media(max-width:960px){
+  .hd-nav a:not(.hd-btn){display:none}
+  .hero{padding:90px 5% 50px}
+  .hero-inner{grid-template-columns:1fr;gap:2.5rem}
+  .hero-l h1{font-size:2.2rem;line-height:1.45}
+  .hero-l .lead{font-size:.95rem}
+  .btn-mega,.btn-blue-strong,.btn-gold-big{width:100%;justify-content:center;font-size:1rem;padding:1.1rem 1.5rem}
+  .cta-block{align-items:stretch;width:100%}
+  .scene-inner{grid-template-columns:1fr;gap:2.5rem}
+  .reasons-grid,.pillars-grid{grid-template-columns:1fr}
+  .steps-grid{grid-template-columns:1fr;gap:2rem}
+  .steps-grid::before{display:none}
+  .scene,.compare,.reasons,.std-cta,.pillars,.calc-sec,.prem-cta,.prem-div,.faq,.steps{padding:3.5rem 5%}
+  .mob-cta{display:block}
+  body{padding-bottom:78px}
+}
+</style>
+</head>
+<body>
+
+<header id="hd">
+  <div class="logo" onclick="window.scrollTo({top:0,behavior:'smooth'})">Property<b>Advisors</b></div>
+  <nav class="hd-nav">
+    <a onclick="document.getElementById('std-top').scrollIntoView({behavior:'smooth'})">STANDARD</a>
+    <a onclick="document.getElementById('prem-top').scrollIntoView({behavior:'smooth'})">PREMIUM</a>
+    <a onclick="document.getElementById('faq-top').scrollIntoView({behavior:'smooth'})">FAQ</a>
+    <a href="https://www.propertyad-tokyo.com" target="_blank" rel="noopener" class="hd-btn">無料診断 →</a>
+  </nav>
+</header>
+
+<div class="mob-cta">
+  <a href="https://www.propertyad-tokyo.com" target="_blank" rel="noopener">2分であなたの借入可能額を見る →<small>無料／営業電話なし</small></a>
+</div>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-l">
+      <div class="eyebrow rv-l">Tokyo Real Estate Investment</div>
+      <h1 class="rv-l">一生働きたい<br>訳じゃない。<br><em>収入の柱を、もう一本。</em></h1>
+      <p class="lead rv-l">給料だけに頼る生活から、<strong>毎月家賃が入る生活</strong>へ。<br>まずは、<strong>あなたが「いくらまで借りられるか」</strong>を 2分で確認してみてください。</p>
+
+      <div class="cta-block rv-l">
+        <a href="https://www.propertyad-tokyo.com" target="_blank" rel="noopener" class="btn-mega">
+          <span>借入可能額を2分で見る（無料）</span>
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <div class="checks">
+          <span class="check">営業電話なし</span>
+          <span class="check">個人情報入力なし</span>
+          <span class="check">その場で結果</span>
+        </div>
+        <p class="btn-sub">9問・所要2分 ／ OK判定の方のみInstagram DMでご案内</p>
+      </div>
+    </div>
+
+    <div class="hero-r rv-r">
+      <div class="hd-card fear">
+        <div>
+          <div class="hdc-l">老後に不足するとされる金額</div>
+          <div class="hdc-d">年金収入だけでは賄えない生活費の差。<br>「貯めるだけ」では年々広がる。</div>
+        </div>
+        <div class="hdc-n">2,000<sub>万円</sub></div>
+      </div>
+      <div class="hd-card fear">
+        <div>
+          <div class="hdc-l">銀行普通預金の年利</div>
+          <div class="hdc-d">100万円を1年預けても利息はわずか10円。<br>物価上昇率との乖離は広がる一方。</div>
+        </div>
+        <div class="hdc-n">0.001<sub>%</sub></div>
+      </div>
+      <div class="hd-card hope">
+        <div>
+          <div class="hdc-l">不動産投資で目指せる収入</div>
+          <div class="hdc-d">東京都心ワンルームの家賃収入は安定。<br>本業を続けながら"もう一本の柱"に。</div>
+        </div>
+        <div class="hdc-n">月10<sub>万円〜</sub></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ STEPS ═══ -->
+<section class="steps">
+  <div class="steps-inner">
+    <span class="s-tag rv">DIAGNOSIS FLOW</span>
+    <h2 class="steps-h rv">診断後に起きること、すべてお見せします。</h2>
+    <p class="steps-sub rv">どの段階でも、こちらから電話することはありません。</p>
+    <div class="steps-grid">
+      <div class="step rv">
+        <div class="step-num">1</div>
+        <div class="step-h">9問の質問に答える</div>
+        <p class="step-p">年収・勤続年数など 9問のみ。<br>個人情報の入力は不要です。</p>
+      </div>
+      <div class="step rv">
+        <div class="step-num">2</div>
+        <div class="step-h">その場で結果表示</div>
+        <p class="step-p">融資審査の通過可能性を<br>「OK / 要相談 / NG」で即時判定。</p>
+      </div>
+      <div class="step rv">
+        <div class="step-num">3</div>
+        <div class="step-h">OKの方にのみDM案内</div>
+        <p class="step-p">InstagramのDMで個別にご案内。<br>営業電話は一切ありません。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ STANDARD ═══ -->
+<div id="std-top">
+
+  <section class="scene">
+    <div class="scene-inner">
+      <div class="rv-l">
+        <span class="s-tag">STANDARD · ワンルームマンション投資</span>
+        <h2 class="s-h">30代会社員の<br>生活は、こう変わる。</h2>
+        <div class="s-rule"></div>
+        <p class="s-p">副業禁止でも、本業を続けながら。<br>毎月の家賃収入が、将来の選択肢を広げます。</p>
+      </div>
+      <div class="scene-visual rv-r">
+        <div class="scene-item">
+          <div class="si-icon">月</div>
+          <div>
+            <div class="si-h">毎月、自動で家賃収入が入る</div>
+            <p class="si-p">入居者がいる限り、働いていなくても毎月一定の収入が口座に振り込まれます。本業の給与とは別の収入源が生まれます。</p>
+          </div>
+        </div>
+        <div class="scene-item">
+          <div class="si-icon">定</div>
+          <div>
+            <div class="si-h">定年後もローンが終わった物件が残る</div>
+            <p class="si-p">ローン完済後は物件が丸ごと資産に。家賃収入が年金を補う形で、老後の生活を支えます。</p>
+          </div>
+        </div>
+        <div class="scene-item">
+          <div class="si-icon">副</div>
+          <div>
+            <div class="si-h">副業禁止でも始められる</div>
+            <p class="si-p">不動産投資は多くの企業で副業規制の対象外。管理会社に任せれば本業に支障なく運用できます。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INSERTION CTA -->
+  <section class="ins-cta">
+    <div class="ins-cta-inner">
+      <p class="ins-cta-h">で、自分は始められるのか？ ── 答えは2分でわかります。</p>
+      <a href="https://www.propertyad-tokyo.com" target="_blank" rel="noopener" class="btn-line">借入可能額をチェックする →</a>
+    </div>
+  </section>
+
+  <section class="compare">
+    <div class="compare-inner">
+      <span class="s-tag rv">資産運用の選択肢を比べる</span>
+      <h2 class="s-h rv">NISA・保険・不動産投資<br>それぞれの役割</h2>
+      <div class="s-rule rv"></div>
+      <p class="s-p rv">どれが優れているではなく、目的によって役割が違います。<br>不動産投資にも弱点はあります。正直にお見せします。</p>
+      <div class="compare-wrap rv">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th style="text-align:left">項目</th>
+              <th>NISA<br><span style="font-size:.72rem;font-weight:400;color:var(--ink3)">積立・成長投資</span></th>
+              <th>生命保険<br><span style="font-size:.72rem;font-weight:400;color:var(--ink3)">保障・貯蓄型</span></th>
+              <th class="hl">不動産投資<br><span style="font-size:.72rem;font-weight:400">ワンルーム</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="row-h">安定性・値動き</td>
+              <td><span class="c-circle c-mid">△</span><span class="c-cell-label">市場に連動</span></td>
+              <td><span class="c-circle c-good">◯</span><span class="c-cell-label">安定</span></td>
+              <td class="hl"><span class="c-circle c-good">◯</span><span class="c-cell-label">安定収入</span></td>
+            </tr>
+            <tr>
+              <td class="row-h">レバレッジ活用</td>
+              <td><span class="c-circle c-low">✕</span><span class="c-cell-label">現金のみ</span></td>
+              <td><span class="c-circle c-low">✕</span><span class="c-cell-label">現金のみ</span></td>
+              <td class="hl"><span class="c-circle c-good">◯</span><span class="c-cell-label">融資を活用</span></td>
+            </tr>
+            <tr>
+              <td class="row-h">老後の収入源</td>
+              <td><span class="c-circle c-mid">△</span><span class="c-cell-label">取崩し前提</span></td>
+              <td><span class="c-circle c-mid">△</span><span class="c-cell-label">満期後のみ</span></td>
+              <td class="hl"><span class="c-circle c-good">◯</span><span class="c-cell-label">継続的家賃収入</span></td>
+            </tr>
+            <tr>
+              <td class="row-h">節税効果</td>
+              <td><span class="c-circle c-good">◯</span><span class="c-cell-label">運用益非課税</span></td>
+              <td><span class="c-circle c-mid">△</span><span class="c-cell-label">控除あり</span></td>
+              <td class="hl"><span class="c-circle c-good">◯</span><span class="c-cell-label">減価償却・損益通算</span></td>
+            </tr>
+            <tr>
+              <td class="row-h">流動性（換金しやすさ）</td>
+              <td><span class="c-circle c-good">◯</span><span class="c-cell-label">いつでも売却</span></td>
+              <td><span class="c-circle c-mid">△</span><span class="c-cell-label">解約は元本割れも</span></td>
+              <td class="hl"><span class="c-circle c-mid">△</span><span class="c-cell-label">売却に時間</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="compare-note rv">※ 上記は一般的な傾向です。個人の状況・商品内容により異なります。投資はご自身の判断と責任において行ってください。</p>
+    </div>
+  </section>
+
+  <section class="reasons">
+    <div class="reasons-inner">
+      <span class="s-tag rv">なぜワンルームマンションなのか</span>
+      <h2 class="s-h rv">会社員に選ばれる<br>3つの理由</h2>
+      <div class="s-rule rv"></div>
+      <div class="reasons-grid">
+        <div class="reason-card rv">
+          <div class="rc-bar"></div>
+          <div class="rc-n">01</div>
+          <h3 class="rc-h">少額の自己資金から始められる</h3>
+          <p class="rc-p">安定した給与収入があると金融機関からの評価が高く、融資が通りやすい属性です。まとまった自己資金がなくても始めやすいのが特徴です。</p>
+          <span class="rc-badge">融資活用</span>
+        </div>
+        <div class="reason-card rv">
+          <div class="rc-bar"></div>
+          <div class="rc-n">02</div>
+          <h3 class="rc-h">東京の賃貸需要は安定している</h3>
+          <p class="rc-p">単身者・若年層の流入が続く東京都心は空室リスクが低く、安定した家賃収入が見込みやすい市場環境です。</p>
+          <span class="rc-badge">需要安定</span>
+        </div>
+        <div class="reason-card rv">
+          <div class="rc-bar"></div>
+          <div class="rc-n">03</div>
+          <h3 class="rc-h">管理を任せて本業に集中できる</h3>
+          <p class="rc-p">入居者対応・家賃集金・修繕手配などは管理会社に委託が可能。時間を取られずに資産形成を続けられます。</p>
+          <span class="rc-badge">管理委託可</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="std-cta">
+    <div class="std-cta-inner">
+      <span class="s-tag s-tag-g rv" style="color:rgba(255,255,255,.65)">STANDARD · 無料診断</span>
+      <h2 class="rv">まず、<br>始められるかどうかを確認しませんか。</h2>
+      <p class="rv">物件を勧める前に、まず<strong style="color:#fff">あなたの「借りられる枠」</strong>を確認します。<br>NG判定の方には、こちらから連絡しません。</p>
+      <div class="cta-block rv">
+        <a href="https://www.propertyad-tokyo.com" target="_blank" rel="noopener" class="btn-blue-strong">
+          <span>借入可能額を2分で見る（無料）</span>
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <div class="checks">
+          <span class="check">営業電話なし</span>
+          <span class="check">個人情報入力なし</span>
+          <span class="check">その場で結果</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ═══ PREMIUM DIVIDER ═══ -->
+<div class="prem-div" id="prem-top">
+  <div class="prem-div-inner">
+    <div class="prem-div-tag">PREMIUM</div>
+    <h2 class="prem-div-h rv"><span class="jp">すでに資産をお持ちの方へ。</span><br>For Established Investors.</h2>
+    <p class="prem-div-p rv">節税・相続対策・資産保全。<br>不動産投資は、富裕層の資産戦略に深く組み込まれています。</p>
+  </div>
+</div>
+
+<!-- ═══ PREMIUM PILLARS ═══ -->
+<div>
+  <section class="pillars">
+    <div class="pillars-inner">
+      <span class="s-tag s-tag-g rv">なぜ資産家に選ばれるのか</span>
+      <h2 class="s-h s-h-w rv">不動産投資が果たす<br>3つの役割</h2>
+      <div class="s-rule s-rule-g rv"></div>
+      <div class="pillars-grid">
+        <div class="pillar rv">
+          <div class="pl-en">Tax Reduction</div>
+          <h3 class="pl-h">節税</h3>
+          <p class="pl-p">減価償却費を経費計上することで給与所得と損益通算が可能。高所得者ほど所得税・住民税の節税効果が大きくなります。</p>
+        </div>
+        <div class="pillar rv">
+          <div class="pl-en">Inheritance</div>
+          <h3 class="pl-h">相続対策</h3>
+          <p class="pl-p">不動産の相続税評価額は現金より低くなるケースが多く、現金をそのまま相続するより税負担を抑えられる場合があります。</p>
+        </div>
+        <div class="pillar rv">
+          <div class="pl-en">Asset Protection</div>
+          <h3 class="pl-h">資産保全</h3>
+          <p class="pl-p">インフレ局面では現金の実質価値が目減りします。実物資産である不動産はインフレに強く、資産価値を守る手段として機能します。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ═══ FAQ ═══ -->
+<section class="faq" id="faq-top">
+  <div class="faq-inner">
+    <span class="s-tag rv">よくある質問</span>
+    <h2 class="s-h rv">気になることに、<br>正直にお答えします。</h2>
+    <div class="s-rule rv"></div>
+    <div class="faq-list">
+      <details class="faq-item rv">
+        <summary class="faq-q"><span><span class="qmark">Q.</span>診断後に営業電話はかかってきますか？</span></summary>
+        <div class="faq-a"><strong>かかってきません。</strong>そもそも電話番号の入力欄がありません。OK判定の方のみ、InstagramのDMでご案内します。「DMが届かない＝NG判定」という運用のため、しつこい連絡は構造的に発生しません。</div>
+      </details>
+      <details class="faq-item rv">
+        <summary class="faq-q"><span><span class="qmark">Q.</span>個人情報を入力する必要はありますか？</span></summary>
+        <div class="faq-a">診断ステップでは<strong>氏名・住所・電話番号などの個人情報は不要</strong>です。年収・勤続年数などの属性情報のみ、9問お答えいただきます。</div>
+      </details>
+      <details class="faq-item rv">
+        <summary class="faq-q"><span><span class="qmark">Q.</span>自己資金がほとんどないのですが大丈夫ですか？</span></summary>
+        <div class="faq-a">不動産投資は<strong>金融機関の融資を活用する</strong>のが一般的です。安定した給与収入があれば、自己資金が少なくても始められるケースがあります。診断で「借りられる枠」を確認するのが第一歩です。</div>
+      </details>
+      <details class="faq-item rv">
+        <summary class="faq-q"><span><span class="qmark">Q.</span>本業の会社が副業禁止です。問題ありませんか？</span></summary>
+        <div class="faq-a">不動産投資は<strong>多くの企業で副業規制の対象外</strong>です（資産運用扱い）。確定申告も含めて、本業に支障なく続けられます。詳しくは個別にご説明します。</div>
+      </details>
+      <details class="faq-item rv">
+        <summary class="faq-q"><span><span class="qmark">Q.</span>診断でNGだった場合、何か連絡が来ますか？</span></summary>
+        <div class="faq-a"><strong>一切連絡はありません。</strong>結果はその場で表示されるのみです。「OKの方だけにご案内する」という方針のため、NG判定の方への連絡は構造的に発生しません。</div>
+      </details>
+      <details class="faq-item rv">
+        <summary class="faq-q"><span><span class="qmark">Q.</span>家賃収入だけで本当にローンを返済できるのですか？</span></summary>
+        <div class="faq-a">物件・融資条件によりますが、<strong>家賃収入でローン返済の大部分を賄えるケースが多い</strong>のがワンルーム投資の特徴です。空室期間・修繕費なども含めたシミュレーションを、診断OKの方には個別にお見せしています。</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PREMIUM CTA ═══ -->
+<section class="prem-cta">
+  <div class="prem-cta-inner rv">
+    <span class="s-tag s-tag-g">PREMIUM · 個別相談</span>
+    <h2>あなたの資産に合った<br>戦略をご提案します。</h2>
+    <div class="p-divider"></div>
+    <p class="lead">2分の無料診断後、OK判定の方にのみ<br>InstagramのDMで個別にご案内します。</p>
+    <a href="https://www.propertyad-tokyo.com" target="_blank" rel="noopener" class="btn-gold-big">
+      <span>無料診断を受ける（2分）</span>
+      <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+    <div class="checks">
+      <span class="check">完全無料</span>
+      <span class="check">営業電話なし</span>
+      <span class="check">その場で結果</span>
+    </div>
+  </div>
+</section>
+
+<footer class="ft">
+  <div class="ft-in">
+    <div class="ft-logo">Property<b>Advisors</b></div>
+    <div class="ft-links">
+      <a onclick="document.getElementById('std-top').scrollIntoView({behavior:'smooth'})">STANDARD</a>
+      <a onclick="document.getElementById('prem-top').scrollIntoView({behavior:'smooth'})">PREMIUM</a>
+      <a onclick="document.getElementById('faq-top').scrollIntoView({behavior:'smooth'})">FAQ</a>
+      <a href="https://www.propertyad-tokyo.com" target="_blank" rel="noopener">無料診断</a>
+      <a href="https://www.instagram.com/property_advisors_tokyo/" target="_blank" rel="noopener">Instagram</a>
+    </div>
+  </div>
+</footer>
+<div class="ft-disc">※ 本サービスは不動産投資に関する情報提供・診断サービスです。投資の最終判断はお客様ご自身の責任において行ってください。掲載データは各公的機関の公表情報をもとにしており、将来の運用成果を保証するものではありません。節税効果は個人の税務状況により異なります。</div>
+
+<script>
+window.addEventListener('scroll',()=>{document.getElementById('hd').classList.toggle('s',scrollY>50)})
+const ob=new IntersectionObserver((entries)=>{
+  entries.forEach((e,i)=>{if(e.isIntersecting)setTimeout(()=>e.target.classList.add('in'),i*55)})
+},{threshold:.06,rootMargin:'0px 0px -16px 0px'})
+document.querySelectorAll('.rv,.rv-l,.rv-r').forEach(el=>ob.observe(el))
+</script>
+</body>
+</html>
