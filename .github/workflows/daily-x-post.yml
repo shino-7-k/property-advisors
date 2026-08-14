@@ -1,0 +1,68 @@
+name: 自動X投稿（毎朝）
+
+# プロパティアドバイザーズ 自動X投稿システム。
+# 毎朝、曜日別テーマに沿って投稿文を自動生成し、ログに記録し、
+# X の認証情報が揃っていれば X へ自動投稿する。
+# 手動実行（workflow_dispatch）では dry_run を選べる。
+
+on:
+  schedule:
+    # 23:00 UTC = 翌 08:00 JST（毎朝8時 日本時間）
+    - cron: "0 23 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "X へ投稿せず、生成とログのみ行う"
+        type: boolean
+        default: true
+      post_date:
+        description: "生成対象日を固定 (YYYY-MM-DD、空なら当日JST)"
+        required: false
+        default: ""
+
+concurrency:
+  group: daily-x-post
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリを取得
+        uses: actions/checkout@v4
+
+      - name: Python をセットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 依存関係をインストール
+        run: pip install -r automation/requirements.txt
+
+      - name: 投稿を生成・記録・（可能なら）投稿
+        working-directory: automation
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL }}
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+          DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && '1' || '' }}
+          POST_DATE: ${{ inputs.post_date }}
+        run: python run_daily.py
+
+      - name: 生成物をコミット
+        run: |
+          git config user.name "property-advisors-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add automation/posts
+          if git diff --cached --quiet; then
+            echo "変更なし（コミットするものがありません）"
+          else
+            git commit -m "chore(x-post): 自動生成した本日の投稿を記録"
+            git push
+          fi
