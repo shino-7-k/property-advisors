@@ -7,8 +7,8 @@ Notionへ日次で蓄積するための仕組みです。数値は日々変わ�
 - **Instagram** … Instagram Graph API から**自動取得**（無料）
 - **X（旧Twitter）** … 公式APIが有料のため、標準アナリティクスの**CSVを取り込み**
 
-記録先Notion DB: **「SNS投稿メトリクス（プロパティアドバイザーズ）」**
-`https://app.notion.com/p/a0f32fa149174411b790898e15677e12`
+記録先Notion DB: **「SNS投稿メトリクス（プロパティアドバイザーズ）」**（shingo.soccer713 ワークスペース）
+`https://app.notion.com/p/611cc18feb1743f89eb739845cbc6a74`
 
 ---
 
@@ -35,7 +35,7 @@ Notionへ日次で蓄積するための仕組みです。数値は日々変わ�
    **DBを共有**（これを忘れるとAPIが403になります）。
 3. 環境変数を設定（`.env.example` をコピーして `.env` を作成）。
    - `NOTION_TOKEN` … 上記トークン
-   - `NOTION_DATABASE_ID` … `a0f32fa149174411b790898e15677e12`
+   - `NOTION_DATABASE_ID` … `611cc18feb1743f89eb739845cbc6a74`
 
 > 追加ライブラリのインストールは不要です（Python標準ライブラリのみで動作）。Python 3.9+。
 
