@@ -1,0 +1,8 @@
+# 認証情報・ローカル設定（コミット禁止）
+.env
+x_column_map.json
+*.log
+__pycache__/
+*.pyc
+# 取り込み用CSVの生データ
+*.csv

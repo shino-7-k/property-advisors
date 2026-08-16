@@ -1,0 +1,11 @@
+{
+  "_comment": "実際のCSVの1行目（ヘッダー）に合わせて、左=CSVの列名 / 右=内部キー を追記・修正してください。既定マップにない列名だけ書けばOKです（既定マップとマージされます）。内部キーの選択肢: post_id, content, url, post_date, impressions, reach, likes, comments, saved, shares, profile_visits, link_clicks, engagement, engagement_rate",
+  "インプレッション": "impressions",
+  "いいね": "likes",
+  "返信": "comments",
+  "リポスト": "shares",
+  "エンゲージメント": "engagement",
+  "エンゲージメント率": "engagement_rate",
+  "プロフィールへのアクセス": "profile_visits",
+  "リンクのクリック数": "link_clicks"
+}
