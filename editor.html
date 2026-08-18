@@ -116,6 +116,9 @@
     border-radius:8px;padding:9px;font-size:13px;font-family:inherit;
   }
   .field textarea:focus,.field input:focus{outline:0;border-color:var(--accent)}
+  .sel-input{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);
+    border-radius:8px;padding:9px;font-size:13px;font-family:inherit}
+  .sel-input:focus{outline:0;border-color:var(--accent)}
 
   .row{display:flex;gap:8px;align-items:center}
   .stepper{display:flex;align-items:center;gap:6px}
@@ -191,6 +194,7 @@
 
     <button class="btn ghost" id="undoBtn" title="元に戻す (Ctrl+Z)" disabled>↶ 戻す</button>
     <button class="btn ghost" id="redoBtn" title="やり直し (Ctrl+Y)" disabled>↷ やり直し</button>
+    <button class="btn" id="addImgBtn" title="選択した要素の下に画像・イラストを追加" disabled>🖼 画像を追加</button>
     <button class="btn" id="loadBtn">📂 HTML読み込み</button>
     <button class="btn primary" id="downloadBtn" disabled>⬇ ダウンロード</button>
   </div>
@@ -251,6 +255,7 @@
 
 <input type="file" id="fileInput" accept=".html,.htm,text/html">
 <input type="file" id="imgInput" accept="image/*">
+<input type="file" id="insertImgInput" accept="image/*">
 <div class="toast" id="toast"></div>
 
 <script>
@@ -344,9 +349,27 @@
     selected = null; clearPanel();
     resetHistory();
     $('#downloadBtn').disabled = false;
+    $('#addImgBtn').disabled = false;
     applyMode();
     toast('読み込みました');
   }
+
+  // Selectable web fonts (loaded into the preview so 書体 changes render live)
+  const FONTS=[
+    {n:'そのまま（変更しない）',v:''},
+    {n:'ゴシック体（標準）',v:"'Noto Sans JP',sans-serif"},
+    {n:'明朝体（上品）',v:"'Noto Serif JP',serif"},
+    {n:'丸ゴシック（やさしい）',v:"'Zen Maru Gothic',sans-serif"},
+    {n:'やわらかポップ',v:"'Kosugi Maru',sans-serif"},
+    {n:'手書き風',v:"'Yusei Magic',sans-serif"},
+    {n:'太め見出し',v:"'Zen Kaku Gothic New',sans-serif"},
+    {n:'角丸ゴシック',v:"'M PLUS Rounded 1c',sans-serif"}
+  ];
+  const FONTS_URL='https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;600;700&family=Zen+Maru+Gothic:wght@400;500;700&family=Kosugi+Maru&family=Yusei+Magic&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=M+PLUS+Rounded+1c:wght@400;500;700&display=swap';
+  const GRAD_DIRS=[
+    {n:'上 → 下',v:'to bottom'},{n:'左 → 右',v:'to right'},
+    {n:'左上 → 右下',v:'135deg'},{n:'右上 → 左下',v:'225deg'}
+  ];
 
   const EDITOR_STYLE_ID='__lp_editor_style__';
   function injectEditor(doc){
@@ -357,6 +380,11 @@
         '.__ed_hover{outline:2px dashed #5b8cff !important;outline-offset:1px;cursor:pointer !important}'+
         '.__ed_sel{outline:2px solid #5b8cff !important;outline-offset:1px;box-shadow:0 0 0 4px rgba(91,140,255,.25) !important}';
       (doc.head||doc.documentElement).appendChild(st);
+    }
+    if(!doc.getElementById('__lp_fonts__')){
+      const fl=doc.createElement('link');
+      fl.id='__lp_fonts__'; fl.rel='stylesheet'; fl.href=FONTS_URL;
+      (doc.head||doc.documentElement).appendChild(fl);
     }
     attachHandlers(doc);
   }
@@ -490,13 +518,20 @@
           '<textarea id="f_text">'+escapeHTML(el.textContent)+'</textarea>'));
     }
 
+    // current sizes / font / gradient
+    const rect = el.getBoundingClientRect();
+    const curW = Math.round(rect.width), curH = Math.round(rect.height);
+    const mTop = Math.round(pxNum(computed(el,'marginTop')));
+    const widthMode = el.style.width==='100%' ? 'full' : ((!el.style.width) ? 'auto' : 'px');
+    const heightAuto = !el.style.height;
+    let curFontIdx=0; const ff=(el.style.fontFamily||'');
+    FONTS.forEach((f,i)=>{ if(f.v && ff && f.v.split(',')[0]===ff.split(',')[0]) curFontIdx=i; });
+    const isGrad = /gradient/.test(computed(el,'backgroundImage'));
+
     // Image
     if(isImg){
       html+=grp('画像',
-        '<div class="field"><button class="btn primary" id="f_img" style="width:100%;justify-content:center">🖼 画像を差し替える</button></div>'+
-        field('画像の幅（％）',
-          '<div class="stepper"><button data-w="-10">－</button><span class="val" id="f_wval">'+(el.style.width||'自動')+'</span><button data-w="10">＋</button></div>'+
-          '<button class="mini" id="f_wreset" style="margin-top:8px">幅をリセット（自動）</button>'));
+        '<div class="field"><button class="btn primary" id="f_img" style="width:100%;justify-content:center">🔄 画像を差し替える</button></div>');
     }
 
     // Link
@@ -507,6 +542,10 @@
 
     // Text styling
     html+=grp('文字',
+      field('書体（フォント）',
+        '<select id="f_font" class="sel-input">'+
+          FONTS.map((f,i)=>'<option value="'+i+'"'+(i===curFontIdx?' selected':'')+'>'+f.n+'</option>').join('')+
+        '</select>')+
       field('文字の大きさ',
         '<div class="stepper"><button id="fs_minus">－</button><span class="val" id="fs_val">'+fs+'px</span><button id="fs_plus">＋</button></div>')+
       field('文字色',
@@ -520,11 +559,42 @@
           '<button data-a="right" '+(align==='right'?'class="on"':'')+'>右</button>'+
         '</div>'));
 
-    // Box
+    // Size & outer spacing
+    html+=grp('大きさ・間隔',
+      field((isImg?'画像の幅':'幅（横のサイズ）'),
+        '<div class="seg" id="w_mode" style="margin-bottom:8px">'+
+          '<button data-wm="auto" '+(widthMode==='auto'?'class="on"':'')+'>自動</button>'+
+          '<button data-wm="full" '+(widthMode==='full'?'class="on"':'')+'>いっぱい</button>'+
+        '</div>'+
+        '<div class="stepper"><button id="w_minus">－</button><span class="val" id="w_val">'+(widthMode==='px'?parseInt(el.style.width)+'px':curW+'px')+'</span><button id="w_plus">＋</button></div>')+
+      field('高さ（縦のサイズ）',
+        '<div class="seg" id="h_mode" style="margin-bottom:8px">'+
+          '<button data-hm="auto" '+(heightAuto?'class="on"':'')+'>自動</button>'+
+        '</div>'+
+        '<div class="stepper"><button id="h_minus">－</button><span class="val" id="h_val">'+(heightAuto?curH+'px':parseInt(el.style.height)+'px')+'</span><button id="h_plus">＋</button></div>')+
+      field('上下の間隔（外側）',
+        '<div class="stepper"><button id="m_minus">－</button><span class="val" id="m_val">'+mTop+'px</span><button id="m_plus">＋</button></div>'));
+
+    // Background & padding
     html+=grp('背景・余白',
-      field('背景色',
-        '<div class="swatch"><input type="color" id="f_bg" value="'+bgHex+'"><span class="code" id="f_bg_c">'+(bgTransparent?'なし':bgHex)+'</span>'+
-        '<button class="mini" id="f_bg_none" style="flex:0 0 auto;margin-left:auto">なし</button></div>')+
+      field('背景のタイプ',
+        '<div class="seg" id="bg_mode">'+
+          '<button data-bm="solid" '+(!isGrad?'class="on"':'')+'>単色</button>'+
+          '<button data-bm="grad" '+(isGrad?'class="on"':'')+'>グラデーション</button>'+
+        '</div>')+
+      '<div id="bg_solid" style="'+(isGrad?'display:none':'')+'">'+
+        field('背景色',
+          '<div class="swatch"><input type="color" id="f_bg" value="'+bgHex+'"><span class="code" id="f_bg_c">'+(bgTransparent?'なし':bgHex)+'</span>'+
+          '<button class="mini" id="f_bg_none" style="flex:0 0 auto;margin-left:auto">なし</button></div>')+
+      '</div>'+
+      '<div id="bg_grad" style="'+(isGrad?'':'display:none')+'">'+
+        '<div class="field"><label>グラデーションの色</label>'+
+          '<div class="row"><div class="swatch"><input type="color" id="g_c1" value="'+bgHex+'"></div>'+
+          '<span style="color:var(--muted)">→</span>'+
+          '<div class="swatch"><input type="color" id="g_c2" value="#ffffff"></div></div></div>'+
+        field('向き',
+          '<select id="g_dir" class="sel-input">'+GRAD_DIRS.map(d=>'<option value="'+d.v+'">'+d.n+'</option>').join('')+'</select>')+
+      '</div>'+
       field('内側の余白',
         '<div class="stepper"><button id="pad_minus">－</button><span class="val" id="pad_val">'+pad+'px</span><button id="pad_plus">＋</button></div>'));
 
@@ -562,19 +632,45 @@
     const href = $('#f_href');
     if(href) href.addEventListener('change',()=> change(()=> el.setAttribute('href',href.value)));
 
-    // image
+    // image swap
     const imgBtn=$('#f_img');
     if(imgBtn) imgBtn.addEventListener('click',()=>{ imgTarget=el; $('#imgInput').click(); });
-    document.querySelectorAll('[data-w]').forEach(b=>b.addEventListener('click',()=>{
+
+    // font family
+    const ffSel=$('#f_font');
+    if(ffSel) ffSel.addEventListener('change',()=> change(()=>{ el.style.fontFamily = FONTS[+ffSel.value].v; }));
+
+    // width
+    const wVal=$('#w_val');
+    const readW=()=>{ return el.style.width && el.style.width.endsWith('px') ? parseInt(el.style.width) : Math.round(el.getBoundingClientRect().width); };
+    $('#w_mode').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
       change(()=>{
-        const cur = el.style.width? parseFloat(el.style.width): 100;
-        let nv = Math.max(10, Math.min(100, cur + (+b.dataset.w)));
-        el.style.width = nv+'%'; el.style.height='auto';
-        const v=$('#f_wval'); if(v) v.textContent=nv+'%';
+        $('#w_mode').querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+        if(b.dataset.wm==='auto'){ el.style.width=''; b.classList.add('on'); }
+        else { el.style.width='100%'; b.classList.add('on'); }
+        wVal.textContent=Math.round(el.getBoundingClientRect().width)+'px';
       });
     }));
-    const wreset=$('#f_wreset');
-    if(wreset) wreset.addEventListener('click',()=> change(()=>{ el.style.width=''; el.style.height=''; const v=$('#f_wval'); if(v) v.textContent='自動'; }));
+    const setW=d=>change(()=>{ let nv=Math.max(20,readW()+d); el.style.width=nv+'px'; el.style.maxWidth='100%'; wVal.textContent=nv+'px'; $('#w_mode').querySelectorAll('button').forEach(x=>x.classList.remove('on')); });
+    $('#w_minus').addEventListener('click',()=>setW(-10));
+    $('#w_plus').addEventListener('click',()=>setW(10));
+
+    // height
+    const hVal=$('#h_val');
+    const readH=()=>{ return el.style.height && el.style.height.endsWith('px') ? parseInt(el.style.height) : Math.round(el.getBoundingClientRect().height); };
+    $('#h_mode').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+      change(()=>{ el.style.height=''; b.classList.add('on'); hVal.textContent=Math.round(el.getBoundingClientRect().height)+'px'; });
+    }));
+    const setH=d=>change(()=>{ let nv=Math.max(20,readH()+d); el.style.height=nv+'px'; hVal.textContent=nv+'px'; $('#h_mode').querySelectorAll('button').forEach(x=>x.classList.remove('on')); });
+    $('#h_minus').addEventListener('click',()=>setH(-10));
+    $('#h_plus').addEventListener('click',()=>setH(10));
+
+    // outer margin (top+bottom)
+    let mv=Math.round(pxNum(computed(el,'marginTop')));
+    const mVal=$('#m_val');
+    const setM=d=>change(()=>{ mv=Math.max(0,Math.min(300,mv+d)); el.style.marginTop=mv+'px'; el.style.marginBottom=mv+'px'; mVal.textContent=mv+'px'; });
+    $('#m_minus').addEventListener('click',()=>setM(-4));
+    $('#m_plus').addEventListener('click',()=>setM(4));
 
     // font size
     let fs = Math.round(pxNum(computed(el,'fontSize')));
@@ -604,11 +700,29 @@
       });
     }));
 
-    // bg
+    // background mode
+    $('#bg_mode').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+      $('#bg_mode').querySelectorAll('button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+      const grad = b.dataset.bm==='grad';
+      $('#bg_solid').style.display = grad?'none':'';
+      $('#bg_grad').style.display = grad?'':'none';
+      if(grad) applyGrad(); else change(()=>{ el.style.backgroundImage=''; });
+    }));
+
+    // solid bg
     const bgc=$('#f_bg');
-    bgc.addEventListener('input',()=>{ el.style.backgroundColor=bgc.value; $('#f_bg_c').textContent=bgc.value; });
+    bgc.addEventListener('input',()=>{ el.style.backgroundImage=''; el.style.backgroundColor=bgc.value; $('#f_bg_c').textContent=bgc.value; });
     bgc.addEventListener('change',()=>{ snapshot(); el.style.backgroundColor=bgc.value; });
-    $('#f_bg_none').addEventListener('click',()=> change(()=>{ el.style.backgroundColor='transparent'; $('#f_bg_c').textContent='なし'; }));
+    $('#f_bg_none').addEventListener('click',()=> change(()=>{ el.style.backgroundColor='transparent'; el.style.backgroundImage=''; $('#f_bg_c').textContent='なし'; }));
+
+    // gradient
+    function applyGrad(){
+      const c1=$('#g_c1').value, c2=$('#g_c2').value, dir=$('#g_dir').value;
+      el.style.backgroundImage='linear-gradient('+dir+', '+c1+', '+c2+')';
+    }
+    ['#g_c1','#g_c2'].forEach(id=>{ const e=$(id); if(e) e.addEventListener('input',applyGrad); });
+    const gdir=$('#g_dir'); if(gdir) gdir.addEventListener('change',applyGrad);
+    ['#g_c1','#g_c2'].forEach(id=>{ const e=$(id); if(e) e.addEventListener('change',()=>{ snapshot(); applyGrad(); }); });
 
     // padding
     let pad=Math.round(pxNum(computed(el,'paddingTop')));
@@ -630,6 +744,27 @@
     const file=e.target.files[0]; if(!file||!imgTarget) return;
     const r=new FileReader();
     r.onload=()=>{ snapshot(); imgTarget.src=r.result; toast('画像を差し替えました'); };
+    r.readAsDataURL(file);
+    e.target.value='';
+  });
+
+  // ---------- Insert new image / illustration ----------
+  $('#addImgBtn').addEventListener('click',()=>{ if(getDoc()) $('#insertImgInput').click(); });
+  $('#insertImgInput').addEventListener('change',e=>{
+    const file=e.target.files[0]; const doc=getDoc(); if(!file||!doc) return;
+    const r=new FileReader();
+    r.onload=()=>{
+      snapshot();
+      const img=doc.createElement('img');
+      img.src=r.result;
+      img.style.maxWidth='100%'; img.style.height='auto'; img.style.display='block';
+      img.style.margin='16px auto';
+      if(selected && selected!==doc.body){ selected.parentNode.insertBefore(img, selected.nextSibling); }
+      else { doc.body.appendChild(img); }
+      selectEl(img);
+      img.scrollIntoView({block:'center'});
+      toast('画像を追加しました（クリックで位置や大きさを調整）');
+    };
     r.readAsDataURL(file);
     e.target.value='';
   });
@@ -675,6 +810,9 @@
     const st=clone.querySelector('#'+EDITOR_STYLE_ID); if(st) st.remove();
     clone.querySelectorAll('.__ed_hover,.__ed_sel').forEach(x=>{ x.classList.remove('__ed_hover'); x.classList.remove('__ed_sel'); if(!x.getAttribute('class')) x.removeAttribute('class'); });
     clone.querySelectorAll('[contenteditable]').forEach(x=>x.removeAttribute('contenteditable'));
+    // keep the web-font link only if a web font is actually used
+    const usesWebFont = !!clone.querySelector('[style*="Noto"],[style*="Zen"],[style*="Kosugi"],[style*="Yusei"],[style*="Rounded"]');
+    const fl=clone.querySelector('#__lp_fonts__'); if(fl && !usesWebFont) fl.remove();
     const out='<!DOCTYPE html>\n'+clone.outerHTML;
     const blob=new Blob([out],{type:'text/html'});
     const a=document.createElement('a');
