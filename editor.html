@@ -46,6 +46,7 @@
   .btn.primary:hover{background:var(--accent2)}
   .btn.ghost{background:transparent}
   .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn.on-folder{border-color:var(--good);color:var(--good);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block}
 
   /* ---- Body ---- */
   .body{flex:1;display:flex;min-height:0}
@@ -196,7 +197,8 @@
     <button class="btn ghost" id="redoBtn" title="やり直し (Ctrl+Y)" disabled>↷ やり直し</button>
     <button class="btn" id="addImgBtn" title="選択した要素の下に画像・イラストを追加" disabled>🖼 画像を追加</button>
     <button class="btn" id="loadBtn">📂 HTML読み込み</button>
-    <button class="btn primary" id="downloadBtn" disabled>⬇ ダウンロード</button>
+    <button class="btn" id="folderBtn" title="修正版HTMLの保存先フォルダを設定（Chrome/Edge）">📁 保存先</button>
+    <button class="btn primary" id="downloadBtn" disabled>⬇ 保存</button>
   </div>
 
   <!-- ============ BODY ============ -->
@@ -802,23 +804,81 @@
     applyMode();
   });
 
-  // ---------- Download ----------
-  $('#downloadBtn').addEventListener('click',()=>{
-    const doc=getDoc(); if(!doc) return;
+  // ---------- Save folder (File System Access API) ----------
+  let dirHandle=null;
+  function idbReq(mode,fn){
+    return new Promise((res,rej)=>{
+      const r=indexedDB.open('lp_editor_db',1);
+      r.onupgradeneeded=()=>{ if(!r.result.objectStoreNames.contains('kv')) r.result.createObjectStore('kv'); };
+      r.onsuccess=()=>{ const db=r.result; const tx=db.transaction('kv',mode); const os=tx.objectStore('kv'); const out=fn(os); tx.oncomplete=()=>{db.close();res(out&&out.result);}; tx.onerror=()=>rej(tx.error); };
+      r.onerror=()=>rej(r.error);
+    });
+  }
+  const idbSet=(k,v)=>idbReq('readwrite',os=>os.put(v,k));
+  const idbGet=(k)=>idbReq('readonly',os=>os.get(k));
+
+  function updateFolderBtn(){
+    const b=$('#folderBtn');
+    if(dirHandle){ b.textContent='📁 '+dirHandle.name; b.classList.add('on-folder'); b.title='保存先: '+dirHandle.name+'（クリックで変更）'; }
+    else { b.textContent='📁 保存先'; b.classList.remove('on-folder'); b.title='修正版HTMLの保存先フォルダを設定（Chrome/Edge）'; }
+  }
+  async function ensurePerm(h){
+    const o={mode:'readwrite'};
+    if(await h.queryPermission(o)==='granted') return true;
+    if(await h.requestPermission(o)==='granted') return true;
+    return false;
+  }
+  $('#folderBtn').addEventListener('click',async()=>{
+    if(!window.showDirectoryPicker){ toast('このブラウザは非対応です。Chrome / Edge でお使いください'); return; }
+    try{
+      const h=await window.showDirectoryPicker({mode:'readwrite'});
+      dirHandle=h; await idbSet('dir',h); updateFolderBtn();
+      toast('保存先フォルダを設定：「'+h.name+'」');
+    }catch(e){ /* cancelled */ }
+  });
+  // restore saved folder on load (no permission prompt until first save)
+  idbGet('dir').then(h=>{ if(h){ dirHandle=h; updateFolderBtn(); } }).catch(()=>{});
+
+  // ---------- Build output HTML ----------
+  function buildOutHTML(){
+    const doc=getDoc(); if(!doc) return null;
     const clone=doc.documentElement.cloneNode(true);
-    // strip editor artifacts
     const st=clone.querySelector('#'+EDITOR_STYLE_ID); if(st) st.remove();
     clone.querySelectorAll('.__ed_hover,.__ed_sel').forEach(x=>{ x.classList.remove('__ed_hover'); x.classList.remove('__ed_sel'); if(!x.getAttribute('class')) x.removeAttribute('class'); });
     clone.querySelectorAll('[contenteditable]').forEach(x=>x.removeAttribute('contenteditable'));
-    // keep the web-font link only if a web font is actually used
     const usesWebFont = !!clone.querySelector('[style*="Noto"],[style*="Zen"],[style*="Kosugi"],[style*="Yusei"],[style*="Rounded"]');
     const fl=clone.querySelector('#__lp_fonts__'); if(fl && !usesWebFont) fl.remove();
-    const out='<!DOCTYPE html>\n'+clone.outerHTML;
+    return '<!DOCTYPE html>\n'+clone.outerHTML;
+  }
+  function stamp(){
+    const d=new Date(), p=n=>String(n).padStart(2,'0');
+    return p(d.getMonth()+1)+p(d.getDate())+'_'+p(d.getHours())+p(d.getMinutes());
+  }
+  function blobDownload(out,name){
     const blob=new Blob([out],{type:'text/html'});
     const a=document.createElement('a');
-    a.href=URL.createObjectURL(blob); a.download='lp_edited.html';
+    a.href=URL.createObjectURL(blob); a.download=name;
     a.click(); URL.revokeObjectURL(a.href);
-    toast('ダウンロードしました');
+  }
+
+  // ---------- Save ----------
+  $('#downloadBtn').addEventListener('click',async()=>{
+    const out=buildOutHTML(); if(out==null) return;
+    const fname='lp_edited_'+stamp()+'.html';
+    if(dirHandle){
+      if(await ensurePerm(dirHandle)){
+        try{
+          const fh=await dirHandle.getFileHandle(fname,{create:true});
+          const w=await fh.createWritable(); await w.write(out); await w.close();
+          toast('保存しました：「'+dirHandle.name+'」/ '+fname);
+          return;
+        }catch(e){ toast('フォルダ保存に失敗。通常のダウンロードに切替'); }
+      } else {
+        toast('フォルダの許可がないため通常のダウンロードに切替');
+      }
+    }
+    blobDownload(out,fname);
+    toast('ダウンロードしました：'+fname);
   });
 
   // ---------- Modal / loading ----------
