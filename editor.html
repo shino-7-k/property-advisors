@@ -90,7 +90,12 @@
   .node .ic{width:15px;height:15px;flex:0 0 auto;color:var(--faint)}
   .node.sel .ic{color:var(--accent)}
   .node .lb{flex:1;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .node .lb .t{color:var(--faint);font-weight:400}
+  .node .lb .ty{font-weight:700;color:var(--text)}
+  .node.sel .lb .ty{color:var(--text)}
+  .node .lb .t{color:var(--faint);font-weight:400;margin-left:3px}
+  .tree-note{display:flex;gap:7px;align-items:flex-start;color:var(--faint);font-size:11px;line-height:1.55;padding:6px 8px 10px}
+  .tree-note svg{flex:0 0 auto;margin-top:1px}
+  .tree-note b{color:var(--dim)}
   .node .acts{display:none;gap:1px;flex:0 0 auto}
   .node:hover .acts{display:flex}
   .node .acts button{width:22px;height:22px;border:0;background:transparent;color:var(--faint);border-radius:5px;display:grid;place-items:center}
@@ -242,7 +247,7 @@
     </div>
 
     <div class="sep"></div>
-    <button class="btn icon" id="undoBtn" title="元に戻す (Ctrl+Z)" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 5 5v1"/></svg></button>
+    <button class="btn" id="undoBtn" title="1つ前に戻す (Ctrl+Z)" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 5 5v1"/></svg>1つ戻す</button>
     <button class="btn icon" id="redoBtn" title="やり直し (Ctrl+Y)" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H9a5 5 0 0 0-5 5v1"/></svg></button>
     <button class="btn" id="folderBtn" title="保存先フォルダを設定（Chrome/Edge）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span id="folderLbl">保存先</span></button>
     <button class="btn primary" id="saveBtn" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>保存</button>
@@ -377,8 +382,24 @@ function loadHTML(html,keepAutosaveBar){
   selected=null; clearInspector(); renderLayers();
   resetHistory(); $('#saveBtn').disabled=false;
   applyMode(); hideRestore();
+  revealAll(d);
   scheduleAutosave();
   toast('読み込みました');
+}
+// 遅延読み込み画像・スクロール表示のアニメをプレビュー内で強制発火させる
+function revealAll(d){
+  try{
+    d.querySelectorAll('img[loading="lazy"]').forEach(i=>i.loading='eager');
+    d.querySelectorAll('img[data-src]').forEach(i=>{if(!i.src)i.src=i.getAttribute('data-src');});
+    const win=d.defaultView, root=d.documentElement;
+    const total=Math.max(root.scrollHeight, d.body?d.body.scrollHeight:0);
+    let y=0, guard=0;
+    const step=()=>{
+      if(y<total && guard<400){ win.scrollTo(0,y); y+=Math.max(280, win.innerHeight*0.7); guard++; requestAnimationFrame(step); }
+      else win.scrollTo(0,0);
+    };
+    requestAnimationFrame(step);
+  }catch(e){}
 }
 function injectEditor(d){
   if(!d.getElementById(ED_ID)){
@@ -525,6 +546,11 @@ function buildInspector(el){
     fld('角丸','<div class="step"><button id="rd_m">'+minus()+'</button><span class="v" id="rd_v">'+rad+'px</span><button id="rd_p">'+plus()+'</button></div>')+
     fld('影','<div class="pills" id="sh"><button data-s="none">なし</button><button data-s="sm">弱</button><button data-s="md">中</button><button data-s="lg">強</button></div>'));
 
+  // Overlap order (z-index)
+  h+=grp('重なり順（前後）',ICONS.block,
+    '<div class="row2"><button class="mini" id="z_front">'+svg('<path d="M12 3l8 4-8 4-8-4 8-4z"/><path d="M4 12l8 4 8-4"/>')+'前面へ</button><button class="mini" id="z_back">'+svg('<path d="M4 7l8 4 8-4M4 12l8 4 8-4"/>')+'背面へ</button></div>'+
+    '<div class="add-note" style="text-align:left;padding:8px 2px 0">画像などが重なっているとき、選んだ要素を前面／背面に動かせます。</div>');
+
   // Arrange
   h+=grp('操作',ICONS.cols||ICONS.box,
     '<div class="row2" style="margin-bottom:6px"><button class="mini" id="a_up">'+svg('<path d="M12 19V5M5 12l7-7 7 7"/>')+'上へ</button><button class="mini" id="a_down">'+svg('<path d="M12 5v14M5 12l7 7 7-7"/>')+'下へ</button></div>'+
@@ -605,6 +631,12 @@ function wireInspector(el){
   const SH={none:'none',sm:'0 1px 4px rgba(0,0,0,.12)',md:'0 6px 18px rgba(0,0,0,.15)',lg:'0 16px 40px rgba(0,0,0,.22)'};
   $('#sh').querySelectorAll('button').forEach(b=>b.onclick=()=>chg(()=>{applyStyle(el,'boxShadow',SH[b.dataset.s]);seg('#sh',b);}));
 
+  // overlap order (z-index)
+  const ensureRel=()=>{if(computed(el,'position')==='static')el.style.position='relative';};
+  const curZ=()=>parseInt(el.style.zIndex||computed(el,'zIndex'))||0;
+  $('#z_front').onclick=()=>chg(()=>{ensureRel();el.style.zIndex=curZ()+1;toast('前面へ移動');});
+  $('#z_back').onclick=()=>chg(()=>{ensureRel();el.style.zIndex=curZ()-1;toast('背面へ移動');});
+
   // arrange
   $('#a_up').onclick=()=>{const p=el.previousElementSibling;if(p){snap();el.parentNode.insertBefore(el,p);renderLayers();syncLayerSel();el.scrollIntoView({block:'nearest'});}};
   $('#a_down').onclick=()=>{const n=el.nextElementSibling;if(n){snap();el.parentNode.insertBefore(n,el);renderLayers();syncLayerSel();el.scrollIntoView({block:'nearest'});}};
@@ -624,10 +656,25 @@ function renderLayersInner(){
   if(!d||!d.body){body.innerHTML='<div class="empty-tree">HTMLを読み込むと<br>ここに構成が表示されます</div>';return;}
   const root=document.createElement('div');root.className='tree';
   buildTree(d.body,root,0);
-  body.innerHTML='';body.appendChild(root);
+  body.innerHTML='<div class="tree-note">'+svg('<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/>',13)+'クリックで選択／ドラッグで並び替え。<b>▶</b>で中身を開けます。</div>';
+  body.appendChild(root);
   syncLayerSel();
 }
 function meaningful(el){return el.nodeType===1 && !el.matches('script,style,link,meta,br');}
+function typeName(el){const t=tagName(el);
+  if(t==='img')return '画像';
+  if(t==='a')return getComputedStyle(el).display!=='inline'?'ボタン':'リンク';
+  if(/^h[1-6]$/.test(t))return '見出し';
+  if(t==='p')return '文章';
+  if(t==='span')return '文字';
+  if(t==='button')return 'ボタン';
+  if(t==='hr')return '区切り線';
+  if(t==='ul'||t==='ol')return 'リスト';
+  if(t==='li')return '項目';
+  if(t==='section'||t==='header'||t==='footer'||t==='main'||t==='article')return 'セクション';
+  if(t==='div')return 'かたまり';
+  return t;}
+function snippetOf(el){if(el.tagName==='IMG')return '';const tx=(el.textContent||'').trim().replace(/\s+/g,' ');return tx?tx.slice(0,18):'';}
 function buildTree(parent,container,depth){
   [...parent.children].forEach(el=>{
     if(!meaningful(el))return;
@@ -638,7 +685,7 @@ function buildTree(parent,container,depth){
     const hasKids=kids.length>0;
     row.innerHTML='<span class="tw">'+(hasKids?svg('<path d="M9 6l6 6-6 6"/>',11):'')+'</span>'+
       '<span class="ic">'+svg(elIcon(el),15)+'</span>'+
-      '<span class="lb">'+esc(label(el))+(el.tagName!=='IMG'?'':'')+'</span>'+
+      '<span class="lb"><b class="ty">'+typeName(el)+'</b>'+(snippetOf(el)?' <span class="t">'+esc(snippetOf(el))+'</span>':'')+'</span>'+
       '<span class="acts">'+
         '<button data-a="up" title="上へ">'+svg('<path d="M12 19V5M5 12l7-7 7 7"/>',13)+'</button>'+
         '<button data-a="down" title="下へ">'+svg('<path d="M12 5v14M5 12l7 7 7-7"/>',13)+'</button>'+
@@ -715,7 +762,7 @@ $('#imgBg').addEventListener('change',e=>{const f=e.target.files[0];if(!f||!bgTa
 function applyMode(){const d=getDoc();if(!d)return;if(mode==='preview'&&selected)selected.classList.remove('__ed_s');else if(selected)selected.classList.add('__ed_s');d.querySelectorAll('.__ed_h').forEach(x=>x.classList.remove('__ed_h'));}
 $('#devSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;device=b.dataset.dev;seg('#devSeg',b);
   $('#devLabel').textContent=device==='pc'?'デスクトップ表示':'スマホ表示（ここでの調整はスマホのみ）';
-  if(originalHTML){const d=getDoc();const cur=d?d.body.innerHTML:null;const f=buildFrame();const d2=f.contentDocument;d2.open();d2.write(originalHTML);d2.close();if(cur!=null)d2.body.innerHTML=cur;injectEditor(d2);rebuildResp();selected=null;clearInspector();renderLayers();applyMode();}
+  if(originalHTML){const d=getDoc();const cur=d?d.body.innerHTML:null;const f=buildFrame();const d2=f.contentDocument;d2.open();d2.write(originalHTML);d2.close();if(cur!=null)d2.body.innerHTML=cur;injectEditor(d2);rebuildResp();selected=null;clearInspector();renderLayers();applyMode();revealAll(d2);}
   if(selected)buildInspector(selected);});
 $('#modeSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;mode=b.dataset.mode;seg('#modeSeg',b);applyMode();});
 
@@ -730,7 +777,11 @@ const idbGet=k=>idbReq('readonly',os=>os.get(k));
 const idbDel=k=>idbReq('readwrite',os=>os.delete(k));
 function updateFolderBtn(){const b=$('#folderBtn'),l=$('#folderLbl');if(dirHandle){b.classList.add('folder-on');l.textContent=dirHandle.name;b.title='保存先: '+dirHandle.name;}else{b.classList.remove('folder-on');l.textContent='保存先';b.title='保存先フォルダを設定（Chrome/Edge）';}}
 async function ensurePerm(h){const o={mode:'readwrite'};if(await h.queryPermission(o)==='granted')return true;if(await h.requestPermission(o)==='granted')return true;return false;}
-$('#folderBtn').addEventListener('click',async()=>{if(!window.showDirectoryPicker){toast('Chrome / Edge でお使いください');return;}try{const h=await window.showDirectoryPicker({mode:'readwrite'});dirHandle=h;await idbSet('dir',h);updateFolderBtn();toast('保存先フォルダ：「'+h.name+'」');}catch(e){}});
+$('#folderBtn').addEventListener('click',async()=>{
+  if(!window.showDirectoryPicker){toast('この機能はダウンロード版をChrome/Edgeで開くと使えます');return;}
+  try{const h=await window.showDirectoryPicker({mode:'readwrite'});dirHandle=h;await idbSet('dir',h);updateFolderBtn();toast('保存先フォルダ：「'+h.name+'」');}
+  catch(e){if(e&&e.name==='SecurityError')toast('プレビュー上では使えません。ダウンロード版でお試しください');}
+});
 idbGet('dir').then(h=>{if(h){dirHandle=h;updateFolderBtn();}}).catch(()=>{});
 
 /* ================= OUTPUT / SAVE ================= */
