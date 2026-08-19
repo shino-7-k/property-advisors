@@ -473,7 +473,7 @@
 
   // ---------- Inline text edit ----------
   function startInlineEdit(el){
-    if(el.children.length>0 && el.matches('img,input,br,hr')) return;
+    if(el.matches('img,input,br,hr,svg,video,iframe')) return;
     selectEl(el);
     snapshot();
     el.setAttribute('contenteditable','true');
@@ -500,7 +500,10 @@
   function buildPanel(el){
     const isImg = el.tagName==='IMG';
     const isLink = el.tagName==='A';
-    const hasOnlyText = el.children.length===0 && (el.textContent||'').trim().length>0;
+    const voidLike = el.matches('img,input,br,hr,svg,video,iframe');
+    const hasText = (el.textContent||'').trim().length>0;
+    const hasOnlyText = el.children.length===0 && hasText;
+    const mixedText = el.children.length>0 && hasText && !voidLike;
 
     const fs = Math.round(pxNum(computed(el,'fontSize')));
     const color = rgbToHex(computed(el,'color'));
@@ -518,6 +521,10 @@
       html+=grp('テキスト',
         field('文字を打ち替え',
           '<textarea id="f_text">'+escapeHTML(el.textContent)+'</textarea>'));
+    } else if(mixedText){
+      html+=grp('テキスト',
+        '<div class="field"><button class="btn primary" id="f_edittext" style="width:100%;justify-content:center">✏️ この文字を打ち替える</button>'+
+        '<div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.7">太字などが混ざっているため、ボタンを押す（またはプレビューで<b>ダブルクリック</b>）してその場で書き換えます。<br>太字の部分だけを変えたいときは、その文字をクリックして選び直してください。</div></div>');
     }
 
     // current sizes / font / gradient
@@ -630,6 +637,10 @@
         el.textContent = tx.value;
       });
     }
+
+    // mixed-content text: edit inline (preserves bold etc.)
+    const et = $('#f_edittext');
+    if(et) et.addEventListener('click',()=>{ startInlineEdit(el); toast('その場で文字を打ち替えられます'); });
 
     const href = $('#f_href');
     if(href) href.addEventListener('change',()=> change(()=> el.setAttribute('href',href.value)));
